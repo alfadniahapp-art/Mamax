@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/theme.dart';
 import '../core/constants.dart';
 import '../providers/app_state.dart';
@@ -21,10 +23,7 @@ class SettingsScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text('⚙️ الإعدادات', style: TextStyle(color: AppTheme.txtLight, fontSize: 20, fontWeight: FontWeight.bold)),
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppTheme.txtLight),
-                onPressed: () {},
-              ),
+              IconButton(icon: const Icon(Icons.arrow_back, color: AppTheme.txtLight), onPressed: () {}),
             ],
           ),
           const SizedBox(height: 10),
@@ -43,11 +42,11 @@ class SettingsScreen extends StatelessWidget {
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    _stageButton('الابتدائي', Icons.book, false),
+                    _stageButton(context, 'الابتدائي', Icons.book, 'primary', state),
                     const SizedBox(width: 8),
-                    _stageButton('المتوسط', Icons.school, false),
+                    _stageButton(context, 'المتوسط', Icons.school, 'middle', state),
                     const SizedBox(width: 8),
-                    _stageButton('الثانوي', Icons.menu_book, false),
+                    _stageButton(context, 'الثانوي', Icons.menu_book, 'high', state),
                   ],
                 ),
               ],
@@ -67,10 +66,10 @@ class SettingsScreen extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    _themeCard('بني كلاسيكي', const Color(0xFF8B6B4E), true),
-                    _themeCard('ليلي داكن', const Color(0xFF121212), false),
-                    _themeCard('أزرق المحيط', const Color(0xFF1A78C2), false),
-                    _themeCard('أخضر زمردي', const Color(0xFF2E7D32), false),
+                    _themeCard(context, 'بني كلاسيكي', const Color(0xFF8B6B4E), 'default', state),
+                    _themeCard(context, 'ليلي داكن', const Color(0xFF121212), 'dark', state),
+                    _themeCard(context, 'أزرق المحيط', const Color(0xFF1A78C2), 'blue', state),
+                    _themeCard(context, 'أخضر زمردي', const Color(0xFF2E7D32), 'green', state),
                   ],
                 ),
               ],
@@ -128,7 +127,13 @@ class SettingsScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(b.name, style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.ink)),
-                      const Icon(Icons.delete_outline, color: AppTheme.red, size: 20),
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline, color: AppTheme.red, size: 20),
+                        onPressed: () {
+                          state.banks.removeWhere((bank) => bank.id == b.id);
+                          state.save();
+                        },
+                      ),
                     ],
                   ),
                 )),
@@ -136,6 +141,12 @@ class SettingsScreen extends StatelessWidget {
                   children: [
                     Expanded(
                       child: TextField(
+                        onSubmitted: (val) {
+                          if (val.trim().isNotEmpty) {
+                            state.banks.add(Bank(id: DateTime.now().toString(), name: val.trim()));
+                            state.save();
+                          }
+                        },
                         decoration: InputDecoration(
                           hintText: 'اسم بنك جديد',
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -170,7 +181,9 @@ class SettingsScreen extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('قريباً...')));
+                    },
                     style: ElevatedButton.styleFrom(backgroundColor: AppTheme.green),
                     child: Text('+ إدارة حسابات البنوك (${state.bankAccounts.length})', style: const TextStyle(color: Colors.white)),
                   ),
@@ -198,9 +211,27 @@ class SettingsScreen extends StatelessWidget {
                       Text(p.name, style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.ink)),
                       Row(
                         children: [
-                          const Icon(Icons.edit, color: AppTheme.ink, size: 18),
-                          const SizedBox(width: 15),
-                          const Icon(Icons.delete_outline, color: AppTheme.red, size: 20),
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: AppTheme.ink, size: 18),
+                            onPressed: () {
+                              final controller = TextEditingController(text: p.name);
+                              showDialog(context: context, builder: (ctx) => AlertDialog(
+                                title: const Text('تعديل الاسم'),
+                                content: TextField(controller: controller),
+                                actions: [
+                                  TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')),
+                                  TextButton(onPressed: () { p.name = controller.text; state.save(); Navigator.pop(ctx); }, child: const Text('حفظ')),
+                                ],
+                              ));
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline, color: AppTheme.red, size: 20),
+                            onPressed: () {
+                              state.people.removeWhere((person) => person.id == p.id);
+                              state.save();
+                            },
+                          ),
                         ],
                       )
                     ],
@@ -258,7 +289,10 @@ class SettingsScreen extends StatelessWidget {
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          final dataStr = jsonEncode(state.toJson());
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إنشاء النسخة (يمكنك إضافة كود الحفظ هنا)')));
+                        },
                         style: ElevatedButton.styleFrom(backgroundColor: AppTheme.dk1),
                         child: const Text('تصدير نسخة الآن', style: TextStyle(color: AppTheme.txtLight, fontSize: 12)),
                       ),
@@ -277,7 +311,19 @@ class SettingsScreen extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      showDialog(context: context, builder: (ctx) => AlertDialog(
+                        title: const Text('تأكيد الحذف'),
+                        content: const Text('هل أنت متأكد من مسح جميع البيانات؟'),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')),
+                          TextButton(onPressed: () {
+                            state.resetAll();
+                            Navigator.pop(ctx);
+                          }, child: const Text('مسح', style: TextStyle(color: Colors.red))),
+                        ],
+                      ));
+                    },
                     style: ElevatedButton.styleFrom(backgroundColor: AppTheme.red),
                     child: const Text('مسح كل البيانات', style: TextStyle(color: Colors.white, fontSize: 12)),
                   ),
@@ -293,7 +339,13 @@ class SettingsScreen extends StatelessWidget {
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  showDialog(context: context, builder: (ctx) => AlertDialog(
+                    title: const Text('عن المطور'),
+                    content: const Text('تطبيق MAMX\nالمطور: Abu Almull\nللتواصل: 0922008009'),
+                    actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إغلاق'))],
+                  ));
+                },
                 style: ElevatedButton.styleFrom(backgroundColor: AppTheme.dk1),
                 child: const Text('عن المطور / معلومات التطبيق', style: TextStyle(color: AppTheme.txtLight)),
               ),
@@ -306,7 +358,6 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  // دالة مساعدة لبناء الأقسام المنسدلة
   Widget _buildSection({required String title, required IconData icon, required Widget child, String? badge}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -316,11 +367,7 @@ class SettingsScreen extends StatelessWidget {
         border: Border.all(color: AppTheme.line, width: 2),
       ),
       child: ExpansionTile(
-        leading: CircleAvatar(
-          backgroundColor: AppTheme.dk2,
-          radius: 18,
-          child: Icon(icon, color: AppTheme.txtLight, size: 20),
-        ),
+        leading: CircleAvatar(backgroundColor: AppTheme.dk2, radius: 18, child: Icon(icon, color: AppTheme.txtLight, size: 20)),
         title: Row(
           children: [
             Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.ink, fontSize: 14))),
@@ -334,56 +381,72 @@ class SettingsScreen extends StatelessWidget {
         ),
         iconColor: AppTheme.ink,
         collapsedIconColor: AppTheme.ink,
-        children: [
-          Padding(padding: const EdgeInsets.all(12), child: child),
-        ],
+        children: [Padding(padding: const EdgeInsets.all(12), child: child)],
       ),
     );
   }
 
-  // زر المرحلة
-  Widget _stageButton(String title, IconData icon, bool isActive) {
+  Widget _stageButton(BuildContext context, String title, IconData icon, String stageKey, AppState state) {
+    bool isHidden = state.hiddenStages.contains(stageKey);
     return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          if (isHidden) {
+            state.hiddenStages.remove(stageKey);
+          } else {
+            state.hiddenStages.add(stageKey);
+          }
+          state.save();
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isHidden ? [Colors.grey.shade600, Colors.grey.shade800] : [AppTheme.dk1, AppTheme.dk2],
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, color: AppTheme.txtLight, size: 20),
+              const SizedBox(height: 4),
+              Text(title, style: const TextStyle(color: AppTheme.txtLight, fontSize: 12, fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _themeCard(BuildContext context, String name, Color color, String themeKey, AppState state) {
+    bool isSelected = state.themeName == themeKey;
+    return GestureDetector(
+      onTap: () {
+        AppTheme.applyTheme(context, themeKey);
+        state.themeName = themeKey;
+        state.save();
+      },
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        width: 150,
+        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 8),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [AppTheme.dk1, AppTheme.dk2]),
+          color: color,
           borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: isSelected ? AppTheme.gold : Colors.transparent, width: 3),
         ),
         child: Column(
           children: [
-            Icon(icon, color: AppTheme.txtLight, size: 20),
-            const SizedBox(height: 4),
-            Text(title, style: const TextStyle(color: AppTheme.txtLight, fontSize: 12, fontWeight: FontWeight.bold)),
+            Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+            if (isSelected) ...[
+              const SizedBox(height: 4),
+              const Text('(مُطبق)', style: TextStyle(color: AppTheme.gold, fontSize: 11)),
+            ]
           ],
         ),
       ),
     );
   }
 
-  // بطاقة الثيم
-  Widget _themeCard(String name, Color color, bool isSelected) {
-    return Container(
-      width: 150,
-      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 8),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: isSelected ? AppTheme.gold : Colors.transparent, width: 3),
-      ),
-      child: Column(
-        children: [
-          Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
-          if (isSelected) ...[
-            const SizedBox(height: 4),
-            const Text('(مُطبق)', style: TextStyle(color: AppTheme.gold, fontSize: 11)),
-          ]
-        ],
-      ),
-    );
-  }
-
-  // حقل منسدل
   Widget _dropdownField(String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -392,11 +455,7 @@ class SettingsScreen extends StatelessWidget {
         const SizedBox(height: 5),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          decoration: BoxDecoration(
-            color: AppTheme.cream,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppTheme.line),
-          ),
+          decoration: BoxDecoration(color: AppTheme.cream, borderRadius: BorderRadius.circular(8), border: Border.all(color: AppTheme.line)),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
