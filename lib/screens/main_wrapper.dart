@@ -44,15 +44,15 @@ class _MainWrapperState extends State<MainWrapper> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      // لوحة القيادة (يمين)
+                      // 1. لوحة القيادة (يمين)
                       _navItem(0, Icons.home, 'لوحة القيادة'),
-                      // التقارير
+                      // 2. التقارير
                       _navItem(1, Icons.bar_chart, 'التقارير'),
-                      // فراغ للزر العائم
+                      // مساحة للزر العائم
                       const SizedBox(width: 70),
-                      // كل العمليات
+                      // 3. كل العمليات
                       _navItem(2, Icons.layers, 'كل العمليات'),
-                      // إعدادات (يسار)
+                      // 4. إعدادات (يسار)
                       _navItem(3, Icons.settings, 'إعدادات'),
                     ],
                   ),
