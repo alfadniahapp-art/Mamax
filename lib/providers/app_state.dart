@@ -1,109 +1,121 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/person.dart';
-import '../models/transaction.dart';
-import '../models/bank.dart';
-import '../models/bank_account.dart';
+
+class Person {
+  String id;
+  String name;
+  Map<String, double> wallets;
+  String phone;
+
+  Person({required this.id, required this.name, required this.wallets, this.phone = ''});
+
+  double get total => wallets.values.fold(0, (a, b) => a + b);
+
+  Map<String, dynamic> toJson() => {'id': id, 'name': name, 'wallets': wallets, 'phone': phone};
+
+  factory Person.fromJson(Map<String, dynamic> json) => Person(
+    id: json['id'], 
+    name: json['name'], 
+    wallets: Map<String, double>.from(json['wallets']),
+    phone: json['phone'] ?? '',
+  );
+}
+
+class Transaction {
+  String id;
+  String type; // 'dep', 'wd', 'tr'
+  double amount;
+  String date;
+  String? fromPersonId;
+  String? toPersonId;
+  String sourceDest;
+  String note;
+
+  Transaction({
+    required this.id, required this.type, required this.amount, required this.date,
+    this.fromPersonId, this.toPersonId, this.sourceDest = '', this.note = ''
+  });
+
+  Map<String, dynamic> toJson() => {
+    'id': id, 'type': type, 'amount': amount, 'date': date, 
+    'fromPersonId': fromPersonId, 'toPersonId': toPersonId, 
+    'sourceDest': sourceDest, 'note': note
+  };
+
+  factory Transaction.fromJson(Map<String, dynamic> json) => Transaction(
+    id: json['id'], type: json['type'], amount: json['amount'], date: json['date'],
+    fromPersonId: json['fromPersonId'], toPersonId: json['toPersonId'],
+    sourceDest: json['sourceDest'] ?? '', note: json['note'] ?? ''
+  );
+}
+
+class Bank {
+  String id;
+  String name;
+  Bank({required this.id, required this.name});
+  Map<String, dynamic> toJson() => {'id': id, 'name': name};
+  factory Bank.fromJson(Map<String, dynamic> json) => Bank(id: json['id'], name: json['name']);
+}
 
 class AppState extends ChangeNotifier {
-  static const String _storageKey = 'MAMX_v1';
-
   String currency = 'ج.س';
   List<Person> people = [];
   List<Transaction> transactions = [];
   List<Bank> banks = [];
-  List<BankAccount> bankAccounts = [];
-  List<String> hiddenStages = [];
-  bool autoBackup = false;
 
-  // تحميل البيانات عند فتح التطبيق
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
-    final String? data = prefs.getString(_storageKey);
-    
+    final data = prefs.getString('MAMX_DATA');
     if (data != null) {
-      try {
-        final Map<String, dynamic> json = jsonDecode(data);
-        currency = json['currency'] ?? 'ج.س';
-        hiddenStages = List<String>.from(json['hiddenStages'] ?? []);
-        autoBackup = json['autoBackup'] ?? false;
-        
-        people = (json['people'] as List? ?? []).map((e) => Person.fromJson(e)).toList();
-        transactions = (json['transactions'] as List? ?? []).map((e) => Transaction.fromJson(e)).toList();
-        banks = (json['banks'] as List? ?? []).map((e) => Bank.fromJson(e)).toList();
-        bankAccounts = (json['bankAccounts'] as List? ?? []).map((e) => BankAccount.fromJson(e)).toList();
-      } catch (e) {
-        debugPrint('خطأ في تحميل البيانات: $e');
-      }
+      final json = jsonDecode(data);
+      currency = json['currency'] ?? 'ج.س';
+      people = (json['people'] as List).map((e) => Person.fromJson(e)).toList();
+      transactions = (json['transactions'] as List).map((e) => Transaction.fromJson(e)).toList();
+      banks = (json['banks'] as List).map((e) => Bank.fromJson(e)).toList();
     } else {
-      // بيانات افتراضية إذا كان التطبيق يفتح لأول مرة
-      banks = [
-        Bank(id: 'b1', name: 'بنك الخرطوم'),
-        Bank(id: 'b2', name: 'بنك فيصل')
+      // بيانات افتراضية عند أول تشغيل
+      banks = [Bank(id: 'b1', name: 'بنك الخرطوم'), Bank(id: 'b2', name: 'بنك فيصل')];
+      people = [
+        Person(id: 'p1', name: 'أول ابتدائي', wallets: {'cash': 0}),
+        Person(id: 'p2', name: 'ثاني ابتدائي', wallets: {'cash': 0}),
+        Person(id: 'p3', name: 'ثالث ابتدائي', wallets: {'cash': 0}),
       ];
-      save();
     }
     notifyListeners();
   }
 
-  // حفظ البيانات في الهاتف
   Future<void> save() async {
     final prefs = await SharedPreferences.getInstance();
-    final Map<String, dynamic> data = {
+    final data = jsonEncode({
       'currency': currency,
-      'hiddenStages': hiddenStages,
-      'autoBackup': autoBackup,
-      'people': people.map((p) => p.toJson()).toList(),
-      'transactions': transactions.map((t) => t.toJson()).toList(),
-      'banks': banks.map((b) => b.toJson()).toList(),
-      'bankAccounts': bankAccounts.map((ba) => ba.toJson()).toList(),
-    };
-    await prefs.setString(_storageKey, jsonEncode(data));
+      'people': people.map((e) => e.toJson()).toList(),
+      'transactions': transactions.map((e) => e.toJson()).toList(),
+      'banks': banks.map((e) => e.toJson()).toList(),
+    });
+    await prefs.setString('MAMX_DATA', data);
     notifyListeners();
   }
 
-  // دوال مساعدة لجلب البيانات
-  Person? getPersonById(String id) {
-    try {
-      return people.firstWhere((p) => p.id == id);
-    } catch (e) {
-      return null;
-    }
+  Person? getPersonById(String? id) {
+    if (id == null) return null;
+    try { return people.firstWhere((p) => p.id == id); } catch (e) { return null; }
   }
 
-  String getWalletName(String walletId) {
-    if (walletId == 'cash') return 'الصندوق';
-    try {
-      return banks.firstWhere((b) => b.id == walletId).name;
-    } catch (e) {
-      return 'بنك محذوف';
+  void addTransaction(Transaction tx) {
+    if (tx.type == 'dep') {
+      final p = getPersonById(tx.toPersonId);
+      if (p != null) p.wallets['cash'] = (p.wallets['cash'] ?? 0) + tx.amount;
+    } else if (tx.type == 'wd') {
+      final p = getPersonById(tx.fromPersonId);
+      if (p != null) p.wallets['cash'] = (p.wallets['cash'] ?? 0) - tx.amount;
+    } else if (tx.type == 'tr') {
+      final from = getPersonById(tx.fromPersonId);
+      final to = getPersonById(tx.toPersonId);
+      if (from != null) from.wallets['cash'] = (from.wallets['cash'] ?? 0) - tx.amount;
+      if (to != null) to.wallets['cash'] = (to.wallets['cash'] ?? 0) + tx.amount;
     }
-  }
-
-  // إضافة حساب جديد
-  void addPerson(Person person) {
-    people.add(person);
-    save();
-  }
-
-  // إضافة حركة مالية (مع تحديث الأرصدة)
-  void addTransaction(Transaction tx, bool applyToBalance) {
-    if (applyToBalance) {
-      if (tx.fromPersonId != null) {
-        final fromP = getPersonById(tx.fromPersonId!);
-        if (fromP != null) {
-          fromP.wallets[tx.fromWallet!] = (fromP.wallets[tx.fromWallet!] ?? 0) - tx.amount;
-        }
-      }
-      if (tx.toPersonId != null) {
-        final toP = getPersonById(tx.toPersonId!);
-        if (toP != null) {
-          toP.wallets[tx.toWallet!] = (toP.wallets[tx.toWallet!] ?? 0) + tx.amount;
-        }
-      }
-    }
-    transactions.insert(0, tx); // إضافة الحركة في أعلى القائمة
+    transactions.insert(0, tx);
     save();
   }
 }
