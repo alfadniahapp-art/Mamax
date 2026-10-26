@@ -16,11 +16,6 @@ class MainWrapper extends StatefulWidget {
 class _MainWrapperState extends State<MainWrapper> {
   int _currentIndex = 0;
 
-  // ترتيب الشاشات: 
-  // 0: لوحة القيادة (يمين)
-  // 1: التقارير
-  // 2: كل العمليات
-  // 3: الإعدادات (يسار)
   final List<Widget> _screens = [
     const HomeScreen(),
     const ReportsScreen(),
@@ -49,19 +44,19 @@ class _MainWrapperState extends State<MainWrapper> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      // الزر الأول (يمين): لوحة القيادة
+                      // لوحة القيادة (يمين)
                       _navItem(0, Icons.home, 'لوحة القيادة'),
-                      // الزر الثاني: التقارير
+                      // التقارير
                       _navItem(1, Icons.bar_chart, 'التقارير'),
                       // فراغ للزر العائم
                       const SizedBox(width: 70),
-                      // الزر الثالث: كل العمليات
+                      // كل العمليات
                       _navItem(2, Icons.layers, 'كل العمليات'),
-                      // الزر الرابع (يسار): إعدادات
+                      // إعدادات (يسار)
                       _navItem(3, Icons.settings, 'إعدادات'),
                     ],
                   ),
-                  // الزر العائم (FAB)
+                  // الزر العائم
                   Positioned(
                     top: -35,
                     left: MediaQuery.of(context).size.width / 2 - 37,
