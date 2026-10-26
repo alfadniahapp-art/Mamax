@@ -16,25 +16,36 @@ class MamaxApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => AppState()..load(),
-      child: MaterialApp(
-        title: 'MAMX',
-        theme: AppTheme.themeData,
-        debugShowCheckedModeBanner: false,
-        // إجبار التطبيق على اللغة العربية واتجاه RTL
-        locale: const Locale('ar', 'SA'),
-        supportedLocales: const [Locale('ar', 'SA'), Locale('en', 'US')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        builder: (context, child) {
-          return Directionality(
-            textDirection: TextDirection.rtl,
-            child: child!,
+      child: Consumer<AppState>(
+        builder: (context, state, child) {
+          // تغيير الثيم بناءً على الاختيار في الإعدادات
+          final theme = state.themeName == 'dark' 
+              ? ThemeData.dark().copyWith(
+                  scaffoldBackgroundColor: const Color(0xFF121212),
+                  colorScheme: const ColorScheme.dark(primary: AppTheme.gold, surface: Color(0xFF1E1E1E)),
+                )
+              : AppTheme.themeData; // الثيم الافتراضي (البني)
+
+          return MaterialApp(
+            title: 'MAMX',
+            theme: theme,
+            debugShowCheckedModeBanner: false,
+            locale: const Locale('ar', 'SA'),
+            supportedLocales: const [Locale('ar', 'SA'), Locale('en', 'US')],
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            builder: (context, child) {
+              return Directionality(
+                textDirection: TextDirection.rtl,
+                child: child!,
+              );
+            },
+            home: const SplashAndAuth(),
           );
         },
-        home: const SplashAndAuth(),
       ),
     );
   }
