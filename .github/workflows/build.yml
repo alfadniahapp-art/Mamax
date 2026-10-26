@@ -1,4 +1,4 @@
-name: Build Flutter APK & Get License
+name: Build Flutter APK
 
 on:
   push:
@@ -27,15 +27,6 @@ jobs:
           flutter-version: '3.24.0'
           channel: 'stable'
           cache: true
-
-      - name: Print License Key
-        run: |
-          flutter create temp_app
-          cd temp_app
-          cp ../app_code/lib/core/license.dart lib/
-          # كتابة ملف مؤقت لتشغيل الطباعة
-          echo "import 'license.dart'; void main() { LicenseManager.printDebugLicense(); }" > lib/main.dart
-          dart run lib/main.dart
 
       - name: Create Full Flutter Project & Fix Kotlin
         run: |
