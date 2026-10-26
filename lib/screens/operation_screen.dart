@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../core/theme.dart';
 import '../providers/app_state.dart';
-import '../models/transaction.dart';
 
 class OperationScreen extends StatefulWidget {
   final String initialType;
@@ -21,8 +20,6 @@ class _OperationScreenState extends State<OperationScreen> {
 
   String? _fromPersonId;
   String? _toPersonId;
-  String _fromWallet = 'cash';
-  String _toWallet = 'cash';
 
   @override
   void initState() {
@@ -36,6 +33,30 @@ class _OperationScreenState extends State<OperationScreen> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('أدخل مبلغاً صحيحاً')));
       return;
     }
+    if (_type == 'dep' && _toPersonId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('اختر الحساب المستلم')));
+      return;
+    }
+    if (_type == 'wd' && _fromPersonId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('اختر الحساب المصدر')));
+      return;
+    }
+    if (_type == 'tr' && (_fromPersonId == null || _toPersonId == null)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('اختر الحساب المصدر والمستلم')));
+      return;
+    }
+
+    // التحقق من كفاية الرصيد للسحب والتحويل
+    if (_type == 'wd' || _type == 'tr') {
+      final fromPerson = state.getPersonById(_fromPersonId);
+      if (fromPerson != null && (fromPerson.wallets['cash'] ?? 0) < amount) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('رصيد غير كافٍ!'),
+          backgroundColor: AppTheme.red,
+        ));
+        return;
+      }
+    }
 
     final tx = Transaction(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -43,16 +64,18 @@ class _OperationScreenState extends State<OperationScreen> {
       amount: amount,
       date: DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now()),
       fromPersonId: _type != 'dep' ? _fromPersonId : null,
-      fromPersonName: _type != 'dep' ? state.getPersonById(_fromPersonId ?? '')?.name : null,
-      fromWallet: _type != 'dep' ? _fromWallet : null,
       toPersonId: _type != 'wd' ? _toPersonId : null,
-      toPersonName: _type != 'wd' ? state.getPersonById(_toPersonId ?? '')?.name : null,
-      toWallet: _type != 'wd' ? _toWallet : null,
       sourceDest: _sourceDestController.text,
       note: _noteController.text,
     );
 
-    state.addTransaction(tx, true);
+    state.addTransaction(tx);
+    
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('تمت العملية بنجاح ✔'),
+      backgroundColor: AppTheme.green,
+    ));
+    
     Navigator.pop(context);
   }
 
@@ -63,7 +86,7 @@ class _OperationScreenState extends State<OperationScreen> {
     return Scaffold(
       backgroundColor: AppTheme.bg,
       appBar: AppBar(
-        backgroundColor: AppTheme.bg,
+        backgroundColor: AppTheme.dk2,
         elevation: 0,
         title: const Text('⚡ عملية جديدة', style: TextStyle(color: AppTheme.txtLight, fontWeight: FontWeight.bold)),
         iconTheme: const IconThemeData(color: AppTheme.txtLight),
@@ -188,7 +211,10 @@ class _OperationScreenState extends State<OperationScreen> {
         filled: true, fillColor: AppTheme.cream,
       ),
       value: currentVal,
-      items: state.people.map((p) => DropdownMenuItem(value: p.id, child: Text(p.name))).toList(),
+      items: state.people.map((p) => DropdownMenuItem(
+        value: p.id, 
+        child: Text(p.name),
+      )).toList(),
       onChanged: onChanged,
     );
   }
