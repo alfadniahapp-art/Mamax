@@ -1,4 +1,4 @@
-name: Build Flutter APK
+name: Build Flutter APK & Get License
 
 on:
   push:
@@ -28,33 +28,42 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Generate License Key for your Device
+        run: |
+          # حساب الرمز لهاتفك B014-54E1
+          DEVICE_ID="B014-54E1"
+          CLEAN_ID=$(echo $DEVICE_ID | tr -d '-')
+          
+          python3 -c "
+          clean_id = '${CLEAN_ID}'
+          hash = 0
+          for char in clean_id:
+              hash = ((hash << 5) - hash) + ord(char)
+              hash = hash & 0xFFFFFFFF
+          hash = hash ^ 0x2008009
+          hash = hash * 31
+          hex_val = hex(abs(hash))[2:].upper().zfill(8)
+          print(f'=====================================')
+          print(f'License Key for Device ${DEVICE_ID}:')
+          print(f'M{hex_val[:3]}-{hex_val[3:7]}')
+          print(f'=====================================')
+          "
+
       - name: Create Full Flutter Project & Fix Kotlin
         run: |
-          # 1. إنشاء مشروع فلاتر جديد
           flutter create mamax_app
-          
-          # 2. نسخ ملفاتك
           rm -rf mamax_app/lib
           cp -r app_code/lib mamax_app/lib
           cp app_code/pubspec.yaml mamax_app/pubspec.yaml
+          if [ -d "app_code/assets" ]; then cp -r app_code/assets mamax_app/assets; fi
           
-          # نسخ الصور إذا وجدت
-          if [ -d "app_code/assets" ]; then
-            cp -r app_code/assets mamax_app/assets
-          fi
-          
-          # 3. تحديث إصدار Kotlin (حل المشكلة)
           cd mamax_app/android
           sed -i 's/ext.kotlin_version = .*/ext.kotlin_version = "1.9.22"/' build.gradle || true
           sed -i 's/id "org.jetbrains.kotlin.android" version .*/id "org.jetbrains.kotlin.android" version "1.9.22" apply false/' settings.gradle || true
           
           cd ..
           flutter pub get
-          
-          # 4. توليد الأيقونات (إذا كانت مهيأة)
-          if grep -q "flutter_launcher_icons" pubspec.yaml; then
-            dart run flutter_launcher_icons
-          fi
+          if grep -q "flutter_launcher_icons" pubspec.yaml; then dart run flutter_launcher_icons; fi
 
       - name: Build APK (Release)
         run: |
