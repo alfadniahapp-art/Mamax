@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // لتفعيل خاصية النسخ
 import 'package:url_launcher/url_launcher.dart';
 import '../core/theme.dart';
 import '../core/license.dart';
@@ -124,15 +125,36 @@ class _ActivationScreenState extends State<ActivationScreen> {
                   style: TextStyle(fontSize: 11, color: AppTheme.red, fontWeight: FontWeight.bold),
                 ),
                 
-                // عرض الرمز الصحيح على الشاشة
+                // عرض الرمز الصحيح على الشاشة مع زر نسخ
                 if (_deviceId != 'جاري التحميل...')
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Text('رمز التفعيل الخاص بك: $correctKey', 
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.green)),
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 15),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppTheme.green.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppTheme.green, width: 1),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('رمزك: $correctKey', 
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.green)),
+                        const SizedBox(width: 10),
+                        IconButton(
+                          icon: const Icon(Icons.copy, color: AppTheme.green, size: 20),
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: correctKey));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('تم نسخ الرمز بنجاح ✔'), duration: Duration(seconds: 1)),
+                            );
+                          },
+                          tooltip: 'نسخ الرمز',
+                        ),
+                      ],
+                    ),
                   ),
 
-                const SizedBox(height: 15),
                 TextField(
                   controller: _keyController,
                   textAlign: TextAlign.center,
