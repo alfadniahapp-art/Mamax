@@ -34,7 +34,9 @@ jobs:
           rm -rf mamax_app/lib
           cp -r app_code/lib mamax_app/lib
           cp app_code/pubspec.yaml mamax_app/pubspec.yaml
-          if [ -d "app_code/assets" ]; then cp -r app_code/assets mamax_app/assets; fi
+          
+          # نسخ الصورة (هذا هو السطر الجديد)
+          cp app_code/logo.png mamax_app/logo.png
           
           cd mamax_app/android
           sed -i 's/ext.kotlin_version = .*/ext.kotlin_version = "1.9.22"/' build.gradle || true
