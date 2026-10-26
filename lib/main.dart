@@ -16,36 +16,24 @@ class MamaxApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => AppState()..load(),
-      child: Consumer<AppState>(
-        builder: (context, state, child) {
-          // تغيير الثيم بناءً على الاختيار في الإعدادات
-          final theme = state.themeName == 'dark' 
-              ? ThemeData.dark().copyWith(
-                  scaffoldBackgroundColor: const Color(0xFF121212),
-                  colorScheme: const ColorScheme.dark(primary: AppTheme.gold, surface: Color(0xFF1E1E1E)),
-                )
-              : AppTheme.themeData; // الثيم الافتراضي (البني)
-
-          return MaterialApp(
-            title: 'MAMX',
-            theme: theme,
-            debugShowCheckedModeBanner: false,
-            locale: const Locale('ar', 'SA'),
-            supportedLocales: const [Locale('ar', 'SA'), Locale('en', 'US')],
-            localizationsDelegates: const [
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            builder: (context, child) {
-              return Directionality(
-                textDirection: TextDirection.rtl,
-                child: child!,
-              );
-            },
-            home: const SplashAndAuth(),
+      child: MaterialApp(
+        title: 'MAMX',
+        theme: AppTheme.themeData,
+        debugShowCheckedModeBanner: false,
+        locale: const Locale('ar', 'SA'),
+        supportedLocales: const [Locale('ar', 'SA'), Locale('en', 'US')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        builder: (context, child) {
+          return Directionality(
+            textDirection: TextDirection.rtl,
+            child: child!,
           );
         },
+        home: const SplashAndAuth(),
       ),
     );
   }
@@ -68,7 +56,7 @@ class _SplashAndAuthState extends State<SplashAndAuth> {
   }
 
   Future<void> _initializeApp() async {
-    await Future.delayed(const Duration(milliseconds: 1500));
+    await Future.delayed(const Duration(milliseconds: 2000));
     if (mounted) {
       setState(() {
         _showSplash = false;
@@ -82,19 +70,20 @@ class _SplashAndAuthState extends State<SplashAndAuth> {
       return Scaffold(
         backgroundColor: const Color(0xFF061325),
         body: Center(
-          child: Container(
-            width: 200,
-            height: 200,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Center(
-              child: Text(
-                'MAMX',
-                style: TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.w900, letterSpacing: 4),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // عرض صورة الأيقونة بدلاً من النص
+              Image.asset(
+                'logo.png',
+                width: 150,
+                height: 150,
+                errorBuilder: (context, error, stackTrace) {
+                  // في حال لم يجد الصورة، يعرض النص كخطة بديلة
+                  return const Text('MAMX', style: TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold));
+                },
               ),
-            ),
+            ],
           ),
         ),
       );
