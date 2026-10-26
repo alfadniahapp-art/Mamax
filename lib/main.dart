@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'core/theme.dart';
 import 'providers/app_state.dart';
@@ -19,6 +20,20 @@ class MamaxApp extends StatelessWidget {
         title: 'MAMX',
         theme: AppTheme.themeData,
         debugShowCheckedModeBanner: false,
+        // إجبار التطبيق على اللغة العربية واتجاه RTL
+        locale: const Locale('ar', 'SA'),
+        supportedLocales: const [Locale('ar', 'SA'), Locale('en', 'US')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        builder: (context, child) {
+          return Directionality(
+            textDirection: TextDirection.rtl,
+            child: child!,
+          );
+        },
         home: const SplashAndAuth(),
       ),
     );
@@ -74,7 +89,6 @@ class _SplashAndAuthState extends State<SplashAndAuth> {
       );
     }
 
-    // تم تجاوز شاشة التفعيل مؤقتاً
     return const MainWrapper();
   }
 }
