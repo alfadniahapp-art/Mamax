@@ -28,26 +28,14 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Generate License Key for your Device
+      - name: Print License Key
         run: |
-          # حساب الرمز لهاتفك B014-54E1
-          DEVICE_ID="B014-54E1"
-          CLEAN_ID=$(echo $DEVICE_ID | tr -d '-')
-          
-          python3 -c "
-          clean_id = '${CLEAN_ID}'
-          hash = 0
-          for char in clean_id:
-              hash = ((hash << 5) - hash) + ord(char)
-              hash = hash & 0xFFFFFFFF
-          hash = hash ^ 0x2008009
-          hash = hash * 31
-          hex_val = hex(abs(hash))[2:].upper().zfill(8)
-          print(f'=====================================')
-          print(f'License Key for Device ${DEVICE_ID}:')
-          print(f'M{hex_val[:3]}-{hex_val[3:7]}')
-          print(f'=====================================')
-          "
+          flutter create temp_app
+          cd temp_app
+          cp ../app_code/lib/core/license.dart lib/
+          # كتابة ملف مؤقت لتشغيل الطباعة
+          echo "import 'license.dart'; void main() { LicenseManager.printDebugLicense(); }" > lib/main.dart
+          dart run lib/main.dart
 
       - name: Create Full Flutter Project & Fix Kotlin
         run: |
