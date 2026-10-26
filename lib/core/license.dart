@@ -55,6 +55,14 @@ class LicenseManager {
     return 'M${hex.substring(0, 3)}-${hex.substring(3, 7)}';
   }
 
+  // دالة مساعدة لطباعة الرمز (للتجربة فقط)
+  static void printDebugLicense() {
+    generateLicenseKey('B014-54E1').split('').forEach((char) {
+      print('LicenseChar: $char');
+    });
+    print('YOUR_LICENSE_IS: ${generateLicenseKey('B014-54E1')}');
+  }
+
   static Future<bool> isActivated() async {
     final prefs = await SharedPreferences.getInstance();
     final isAct = prefs.getBool(_keyActivated) ?? false;
