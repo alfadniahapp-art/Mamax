@@ -4,6 +4,8 @@ import '../core/theme.dart';
 import '../providers/app_state.dart';
 import 'operation_screen.dart';
 import '../widgets/accounts_modal.dart';
+import 'log_screen.dart';
+import 'reports_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -16,12 +18,12 @@ class HomeScreen extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       child: Column(
         children: [
-          // 1. شريط التاريخ (إحصائيات: هذا العام)
+          // شريط التاريخ
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 10),
             decoration: BoxDecoration(
-              color: AppTheme.dk2.withOpacity(0.5), // لون داكن شفاف
+              color: AppTheme.dk2.withOpacity(0.5),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: AppTheme.line),
             ),
@@ -36,25 +38,23 @@ class HomeScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           
-          // 2. بطاقات الدخل والمصروف والرسم البياني
+          // بطاقات الدخل والرسم البياني
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // الرسم البياني (الدائرة)
               Expanded(
                 flex: 4,
                 child: Container(
                   height: 140,
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2A2A2A), // لون داكن مطابق للصورة
+                    color: const Color(0xFF2A2A2A),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: AppTheme.line, width: 1.5),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Legend
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -64,40 +64,19 @@ class HomeScreen extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 10),
-                      // الدائرة
                       Stack(
                         alignment: Alignment.center,
                         children: [
                           Container(
                             width: 80,
                             height: 80,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppTheme.red, // لون أحمر لأن كل شيء 0
-                            ),
+                            decoration: const BoxDecoration(shape: BoxShape.circle, color: AppTheme.red),
                           ),
                           Container(
                             width: 50,
                             height: 50,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Color(0xFF2A2A2A),
-                            ),
-                            child: const Center(
-                              child: Text('0', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                            ),
-                          ),
-                          // المربع الصغير أسفل الدائرة
-                          Positioned(
-                            bottom: -5,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: AppTheme.red,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Text('0', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                            ),
+                            decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFF2A2A2A)),
+                            child: const Center(child: Text('0', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14))),
                           ),
                         ],
                       ),
@@ -106,7 +85,6 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              // بطاقات الدخل والمصروف
               Expanded(
                 flex: 5,
                 child: Column(
@@ -123,36 +101,25 @@ class HomeScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          // 3. أزرار الإحصائيات (الحسابات، الصندوق، البنوك)
+          // أزرار الإحصائيات
           Row(
             children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (_) => const AccountsModal(),
-                  ),
-                  child: _midButton(Icons.people, 'الحسابات', '${state.people.length}'),
-                ),
-              ),
+              Expanded(child: _midButton(Icons.people, 'الحسابات', '${state.people.length}', () {
+                showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent, builder: (_) => const AccountsModal());
+              })),
               const SizedBox(width: 8),
-              Expanded(child: _midButton(Icons.account_balance_wallet, 'الصندوق', '0')),
+              Expanded(child: _midButton(Icons.account_balance_wallet, 'الصندوق', '0', () {})),
               const SizedBox(width: 8),
-              Expanded(child: _midButton(Icons.account_balance, 'البنوك', '0')),
+              Expanded(child: _midButton(Icons.account_balance, 'البنوك', '0', () {})),
             ],
           ),
           
           const SizedBox(height: 20),
           
-          // 4. القائمة السريعة
+          // القائمة السريعة
           Row(
             children: [
-              GestureDetector(
-                onTap: () {},
-                child: const Icon(Icons.notifications, color: AppTheme.txtLight, size: 24),
-              ),
+              GestureDetector(onTap: () {}, child: const Icon(Icons.notifications, color: AppTheme.txtLight, size: 24)),
               const SizedBox(width: 12),
               const Icon(Icons.settings, color: AppTheme.txtLight, size: 24),
               const SizedBox(width: 12),
@@ -165,28 +132,34 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 10),
           _sectionDivider('العمليات المالية'),
           
-          // أزرار العمليات المالية
+          // أزرار العمليات (تم تبديل الإيداع مع التحويل)
           Row(
             children: [
-              Expanded(child: _quickButton(context, Icons.arrow_downward, 'إيداع', 'dep')),
+              Expanded(child: _quickButton(context, Icons.swap_horiz, 'تحويل', 'tr')),
               const SizedBox(width: 8),
               Expanded(child: _quickButton(context, Icons.arrow_upward, 'سحب', 'wd')),
               const SizedBox(width: 8),
-              Expanded(child: _quickButton(context, Icons.swap_horiz, 'تحويل', 'tr')),
+              Expanded(child: _quickButton(context, Icons.arrow_downward, 'إيداع', 'dep')),
             ],
           ),
 
           const SizedBox(height: 15),
           _sectionDivider('الإدارة والتقارير'),
 
-          // أزرار الإدارة والتقارير
+          // أزرار الإدارة (تم تبديل الحسابات مع التقارير)
           Row(
             children: [
-              Expanded(child: _adminButton(context, Icons.people, 'الحسابات', () {})),
+              Expanded(child: _adminButton(context, Icons.bar_chart, 'التقارير', () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportsScreen()));
+              })),
               const SizedBox(width: 8),
-              Expanded(child: _adminButton(context, Icons.history, 'السجل', () {})),
+              Expanded(child: _adminButton(context, Icons.history, 'السجل', () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const LogScreen()));
+              })),
               const SizedBox(width: 8),
-              Expanded(child: _adminButton(context, Icons.bar_chart, 'التقارير', () {})),
+              Expanded(child: _adminButton(context, Icons.people, 'الحسابات', () {
+                showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent, builder: (_) => const AccountsModal());
+              })),
             ],
           ),
           const SizedBox(height: 20),
@@ -223,11 +196,7 @@ class HomeScreen extends StatelessWidget {
       child: Container(
         height: 90,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF9C7B5B), Color(0xFF7B5F45)], // ألوان مطابقة للصورة
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          gradient: const LinearGradient(colors: [Color(0xFF9C7B5B), Color(0xFF7B5F45)], begin: Alignment.topLeft, end: Alignment.bottomRight),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppTheme.line.withOpacity(0.5), width: 1),
         ),
@@ -253,11 +222,7 @@ class HomeScreen extends StatelessWidget {
       child: Container(
         height: 90,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF9C7B5B), Color(0xFF7B5F45)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          gradient: const LinearGradient(colors: [Color(0xFF9C7B5B), Color(0xFF7B5F45)], begin: Alignment.topLeft, end: Alignment.bottomRight),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppTheme.line.withOpacity(0.5), width: 1),
         ),
@@ -281,7 +246,7 @@ class HomeScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF2A2A2A), // لون داكن مطابق للصورة
+        color: const Color(0xFF2A2A2A),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: color, width: 1.5),
       ),
@@ -301,26 +266,25 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _midButton(IconData icon, String title, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF9C7B5B), Color(0xFF7B5F45)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+  Widget _midButton(IconData icon, String title, String value, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(colors: [Color(0xFF9C7B5B), Color(0xFF7B5F45)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppTheme.line, width: 1),
         ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.line, width: 1),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: AppTheme.txtLight, size: 22),
-          const SizedBox(height: 6),
-          Text(title, style: const TextStyle(color: AppTheme.txtLight, fontSize: 12, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 2),
-          Text(value, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w900)),
-        ],
+        child: Column(
+          children: [
+            Icon(icon, color: AppTheme.txtLight, size: 22),
+            const SizedBox(height: 6),
+            Text(title, style: const TextStyle(color: AppTheme.txtLight, fontSize: 12, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 2),
+            Text(value, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w900)),
+          ],
+        ),
       ),
     );
   }
