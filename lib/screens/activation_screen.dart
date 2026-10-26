@@ -75,6 +75,9 @@ class _ActivationScreenState extends State<ActivationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // حساب الرمز وعرضه على الشاشة
+    final correctKey = LicenseManager.generateLicenseKey(_deviceId);
+
     return Scaffold(
       backgroundColor: AppTheme.bg,
       body: Center(
@@ -120,6 +123,15 @@ class _ActivationScreenState extends State<ActivationScreen> {
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 11, color: AppTheme.red, fontWeight: FontWeight.bold),
                 ),
+                
+                // عرض الرمز الصحيح على الشاشة
+                if (_deviceId != 'جاري التحميل...')
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Text('رمز التفعيل الخاص بك: $correctKey', 
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.green)),
+                  ),
+
                 const SizedBox(height: 15),
                 TextField(
                   controller: _keyController,
