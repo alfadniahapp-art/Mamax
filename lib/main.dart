@@ -20,6 +20,7 @@ class MamaxApp extends StatelessWidget {
         title: 'MAMX',
         theme: AppTheme.themeData,
         debugShowCheckedModeBanner: false,
+        // إجبار التطبيق على اللغة العربية واتجاه RTL
         locale: const Locale('ar', 'SA'),
         supportedLocales: const [Locale('ar', 'SA'), Locale('en', 'US')],
         localizationsDelegates: const [
@@ -56,6 +57,7 @@ class _SplashAndAuthState extends State<SplashAndAuth> {
   }
 
   Future<void> _initializeApp() async {
+    // انتظار ثانيتين لعرض اللوجو
     await Future.delayed(const Duration(milliseconds: 2000));
     if (mounted) {
       setState(() {
@@ -68,18 +70,18 @@ class _SplashAndAuthState extends State<SplashAndAuth> {
   Widget build(BuildContext context) {
     if (_showSplash) {
       return Scaffold(
-        backgroundColor: const Color(0xFF061325),
+        backgroundColor: const Color(0xFF061325), // لون الخلفية الداكن
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // عرض صورة الأيقونة بدلاً من النص
+              // عرض صورة الأيقونة
               Image.asset(
                 'logo.png',
                 width: 150,
                 height: 150,
                 errorBuilder: (context, error, stackTrace) {
-                  // في حال لم يجد الصورة، يعرض النص كخطة بديلة
+                  // في حال لم يجد الصورة، يعرض النص
                   return const Text('MAMX', style: TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold));
                 },
               ),
@@ -89,6 +91,7 @@ class _SplashAndAuthState extends State<SplashAndAuth> {
       );
     }
 
+    // بعد انتهاء شاشة البداية، ننتقل للشاشة الرئيسية
     return const MainWrapper();
   }
 }
