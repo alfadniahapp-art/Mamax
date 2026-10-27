@@ -5,6 +5,7 @@ import '../providers/app_state.dart';
 import 'operation_screen.dart';
 import 'log_screen.dart';
 import 'reports_screen.dart';
+import 'settings_screen.dart'; // <--- تم إضافة هذا السطر
 import '../widgets/accounts_modal.dart';
 
 class HomeScreen extends StatelessWidget {
