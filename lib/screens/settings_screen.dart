@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/theme.dart';
 import '../providers/app_state.dart';
-import '../models/bank.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -15,6 +14,7 @@ class SettingsScreen extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       child: Column(
         children: [
+          // العنوان
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -24,29 +24,33 @@ class SettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 10),
 
-          // 1. المراحل
-          _buildSection(
+          // 1. قسم المراحل
+          _buildSectionBox(
             title: 'إنشاء / إخفاء حسابات المراحل',
             icon: Icons.visibility,
             child: Column(
               children: [
-                const Text('الضغط على الزر لمرة واحدة: ينشئ الحسابات ويُظهرها.\nالضغط مرة أخرى: يُخفيها من الشاشات (بدون حذفها).', style: TextStyle(fontSize: 11, color: Colors.grey, height: 1.5), textAlign: TextAlign.right),
+                const Text(
+                  'الضغط على الزر لمرة واحدة: ينشئ الحسابات ويُظهرها.\nالضغط مرة أخرى: يُخفيها من الشاشات (بدون حذفها).',
+                  style: TextStyle(fontSize: 11, color: Colors.grey, height: 1.5),
+                  textAlign: TextAlign.right,
+                ),
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    _stageButton(context, 'الابتدائي', Icons.book, 'primary', state),
+                    _stageButton('الابتدائي', Icons.book),
                     const SizedBox(width: 8),
-                    _stageButton(context, 'المتوسط', Icons.school, 'middle', state),
+                    _stageButton('المتوسط', Icons.school),
                     const SizedBox(width: 8),
-                    _stageButton(context, 'الثانوي', Icons.menu_book, 'high', state),
+                    _stageButton('الثانوي', Icons.menu_book),
                   ],
                 ),
               ],
             ),
           ),
 
-          // 2. الثيمات
-          _buildSection(
+          // 2. قسم الثيمات
+          _buildSectionBox(
             title: 'مظهر التطبيق (الثيمات)',
             icon: Icons.palette,
             child: Wrap(
@@ -61,8 +65,8 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
 
-          // 3. التفضيلات
-          _buildSection(
+          // 3. التفضيلات العامة
+          _buildSectionBox(
             title: 'التفضيلات العامة',
             icon: Icons.language,
             child: Column(
@@ -75,12 +79,17 @@ class SettingsScreen extends StatelessWidget {
           ),
 
           // 4. العملة
-          _buildSection(
+          _buildSectionBox(
             title: 'العملة',
             icon: Icons.attach_money,
             child: TextField(
               controller: TextEditingController(text: state.currency),
-              decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)), filled: true, fillColor: AppTheme.cream),
+              decoration: InputDecoration(
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                filled: true,
+                fillColor: AppTheme.cream,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+              ),
               onSubmitted: (val) {
                 state.currency = val.trim().isEmpty ? 'ج.س' : val.trim();
                 state.save();
@@ -89,7 +98,7 @@ class SettingsScreen extends StatelessWidget {
           ),
 
           // 5. البنوك
-          _buildSection(
+          _buildSectionBox(
             title: 'البنوك',
             icon: Icons.account_balance,
             badge: '${state.banks.length}',
@@ -115,7 +124,10 @@ class SettingsScreen extends StatelessWidget {
                     Expanded(
                       child: TextField(
                         onSubmitted: (val) {
-                          if (val.trim().isNotEmpty) { state.banks.add(Bank(id: DateTime.now().toString(), name: val.trim())); state.save(); }
+                          if (val.trim().isNotEmpty) {
+                            state.banks.add(Bank(id: DateTime.now().toString(), name: val.trim()));
+                            state.save();
+                          }
                         },
                         decoration: InputDecoration(hintText: 'اسم بنك جديد', border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)), filled: true, fillColor: AppTheme.cream),
                       ),
@@ -129,22 +141,22 @@ class SettingsScreen extends StatelessWidget {
           ),
 
           // 6. حسابات البنوك
-          _buildSection(
+          _buildSectionBox(
             title: 'حسابات البنوك المعتمدة',
             icon: Icons.account_balance_wallet,
-            badge: '${state.bankAccounts.length}',
+            badge: '0',
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('قريباً...'))); },
                 style: ElevatedButton.styleFrom(backgroundColor: AppTheme.green),
-                child: Text('+ إدارة حسابات البنوك (${state.bankAccounts.length})', style: const TextStyle(color: Colors.white)),
+                child: const Text('+ إدارة حسابات البنوك (0)', style: TextStyle(color: Colors.white)),
               ),
             ),
           ),
 
           // 7. إدارة الحسابات
-          _buildSection(
+          _buildSectionBox(
             title: 'إدارة الحسابات',
             icon: Icons.people,
             badge: '${state.people.length}',
@@ -158,8 +170,27 @@ class SettingsScreen extends StatelessWidget {
                     Text(p.name, style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.ink)),
                     Row(
                       children: [
-                        IconButton(icon: const Icon(Icons.edit, color: AppTheme.ink, size: 18), onPressed: () {}),
-                        IconButton(icon: const Icon(Icons.delete_outline, color: AppTheme.red, size: 20), onPressed: () { state.people.removeWhere((person) => person.id == p.id); state.save(); }),
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: AppTheme.ink, size: 18),
+                          onPressed: () {
+                            final controller = TextEditingController(text: p.name);
+                            showDialog(context: context, builder: (ctx) => AlertDialog(
+                              title: const Text('تعديل الاسم'),
+                              content: TextField(controller: controller),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')),
+                                TextButton(onPressed: () { p.name = controller.text; state.save(); Navigator.pop(ctx); }, child: const Text('حفظ')),
+                              ],
+                            ));
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline, color: AppTheme.red, size: 20),
+                          onPressed: () {
+                            state.people.removeWhere((person) => person.id == p.id);
+                            state.save();
+                          },
+                        ),
                       ],
                     )
                   ],
@@ -169,20 +200,20 @@ class SettingsScreen extends StatelessWidget {
           ),
 
           // 8. النسخ الاحتياطي
-          _buildSection(
+          _buildSectionBox(
             title: 'النسخ الاحتياطي التلقائي',
             icon: Icons.backup,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('حفظ نسخة تلقائياً للهاتف', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.ink)),
-                Switch(value: state.autoBackup, activeColor: AppTheme.green, onChanged: (val) { state.autoBackup = val; state.save(); }),
+                Switch(value: false, activeColor: AppTheme.green, onChanged: (val) {}),
               ],
             ),
           ),
 
           // 9. البيانات اليدوية
-          _buildSection(
+          _buildSectionBox(
             title: 'البيانات اليدوية',
             icon: Icons.storage,
             child: Column(
@@ -198,11 +229,20 @@ class SettingsScreen extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () { 
-                      // إعادة تعيين بسيطة
-                      state.people.clear();
-                      state.transactions.clear();
-                      state.save();
+                    onPressed: () {
+                      showDialog(context: context, builder: (ctx) => AlertDialog(
+                        title: const Text('تأكيد الحذف'),
+                        content: const Text('هل أنت متأكد من مسح جميع البيانات؟'),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')),
+                          TextButton(onPressed: () {
+                            state.people.clear();
+                            state.transactions.clear();
+                            state.save();
+                            Navigator.pop(ctx);
+                          }, child: const Text('مسح', style: TextStyle(color: Colors.red))),
+                        ],
+                      ));
                     },
                     style: ElevatedButton.styleFrom(backgroundColor: AppTheme.red),
                     child: const Text('مسح كل البيانات', style: TextStyle(color: Colors.white, fontSize: 12)),
@@ -213,51 +253,64 @@ class SettingsScreen extends StatelessWidget {
           ),
 
           // 10. عن المطور
-          _buildSection(
+          _buildSectionBox(
             title: 'عن المطور',
             icon: Icons.info,
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  showDialog(context: context, builder: (ctx) => AlertDialog(
+                    title: const Text('عن المطور'),
+                    content: const Text('تطبيق MAMX\nالمطور: Abu Almull\nللتواصل: 0922008009'),
+                    actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إغلاق'))],
+                  ));
+                },
                 style: ElevatedButton.styleFrom(backgroundColor: AppTheme.dk1),
                 child: const Text('عن المطور / معلومات التطبيق', style: TextStyle(color: AppTheme.txtLight)),
               ),
             ),
           ),
+
           const SizedBox(height: 30),
         ],
       ),
     );
   }
 
-  Widget _buildSection({required String title, required IconData icon, required Widget child, String? badge}) {
+  // دالة لبناء الأقسام بشكل مباشر
+  Widget _buildSectionBox({required String title, required IconData icon, required Widget child, String? badge}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(color: AppTheme.cream, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppTheme.line, width: 2)),
-      child: ExpansionTile(
-        leading: CircleAvatar(backgroundColor: AppTheme.dk2, radius: 18, child: Icon(icon, color: AppTheme.txtLight, size: 20)),
-        title: Row(children: [
-          Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.ink, fontSize: 14))),
-          if (badge != null) Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: AppTheme.dk2, borderRadius: BorderRadius.circular(10)), child: Text(badge, style: const TextStyle(color: AppTheme.txtLight, fontSize: 11, fontWeight: FontWeight.bold))),
-        ]),
-        iconColor: AppTheme.ink, collapsedIconColor: AppTheme.ink,
-        children: [Padding(padding: const EdgeInsets.all(12), child: child)],
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppTheme.line, width: 1))),
+            child: Row(
+              children: [
+                CircleAvatar(backgroundColor: AppTheme.dk2, radius: 16, child: Icon(icon, color: AppTheme.txtLight, size: 18)),
+                const SizedBox(width: 10),
+                Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.ink, fontSize: 14))),
+                if (badge != null)
+                  Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: AppTheme.dk2, borderRadius: BorderRadius.circular(10)), child: Text(badge, style: const TextStyle(color: AppTheme.txtLight, fontSize: 11, fontWeight: FontWeight.bold))),
+              ],
+            ),
+          ),
+          Padding(padding: const EdgeInsets.all(12), child: child),
+        ],
       ),
     );
   }
 
-  Widget _stageButton(BuildContext context, String title, IconData icon, String stageKey, AppState state) {
-    bool isHidden = state.hiddenStages.contains(stageKey);
+  Widget _stageButton(String title, IconData icon) {
     return Expanded(
       child: GestureDetector(
-        onTap: () {
-          if (isHidden) { state.hiddenStages.remove(stageKey); } else { state.hiddenStages.add(stageKey); }
-          state.save();
-        },
+        onTap: () {},
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(gradient: LinearGradient(colors: isHidden ? [Colors.grey.shade600, Colors.grey.shade800] : [AppTheme.dk1, AppTheme.dk2]), borderRadius: BorderRadius.circular(8)),
+          decoration: BoxDecoration(gradient: const LinearGradient(colors: [AppTheme.dk1, AppTheme.dk2]), borderRadius: BorderRadius.circular(8)),
           child: Column(children: [Icon(icon, color: AppTheme.txtLight, size: 20), const SizedBox(height: 4), Text(title, style: const TextStyle(color: AppTheme.txtLight, fontSize: 12, fontWeight: FontWeight.bold))]),
         ),
       ),
