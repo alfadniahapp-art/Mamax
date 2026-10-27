@@ -23,6 +23,9 @@ jobs:
         flutter-version: '3.16.0'
         channel: 'stable'
 
+    - name: Initialize Android Platform
+      run: flutter create . --platforms=android --org com.mamx.schools
+
     - name: Install Dependencies
       run: flutter pub get
 
